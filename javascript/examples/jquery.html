@@ -1,0 +1,121 @@
+<!--
+  Copyright (c) 2006-2013, JGraph Ltd
+  
+  JQuery example for mxGraph. This example demonstrates using
+  a JQuery plugin to generate labels for vertices on the fly.
+-->
+<html>
+
+<head>
+	<title>JQuery plugin for labels</title>
+
+	<!-- Sets the basepath for the library if not in same directory -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+
+	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
+
+	<!-- Example code -->
+	<script type="text/javascript">
+		function main(container) {
+
+			// Fixes possible clipping issues in Chrome
+			mxClient.NO_FO = true;
+			// Disables the built-in context menu
+			mxEvent.disableContextMenu(container);
+			// Creates the graph inside the given container
+			var graph = new mxGraph(container);
+
+
+			graph.addListener(mxEvent.CLICK, function (sender, evt) {
+				var e = evt.getProperty('event'); // mouse event
+				var cell = evt.getProperty('cell'); // cell may be null
+				if (cell) console.log(evt.properties.cell.value)
+				if (cell != null) {
+					// Do something useful with cell and consume the event
+					evt.consume();
+				}
+			});
+
+			// Adds custom HTML labels
+
+			//渲染一个自定义的canvas进入cell
+			var graphConvertValueToString = graph.convertValueToString;
+			graph.convertValueToString = function (cell) {
+
+				console.log(cell)
+				if (cell.value.custom) {
+
+					let d = $('<div data-id="d"></div>')
+					d.css({
+						height: cell.geometry.height,
+						width: cell.geometry.width
+					})
+
+					// 基于准备好的dom，初始化echarts实例
+					var myChart = echarts.init(d[0]);
+					// 绘制图表
+					myChart.setOption({
+						title: {
+							text: 'ECharts 入门示例'
+						},
+						tooltip: {},
+						xAxis: {
+							data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
+						},
+						yAxis: {},
+						series: [{
+							name: '销量',
+							type: 'bar',
+							data: [5, 20, 36, 10, 10, 20]
+						}]
+					});
+
+					return d[0]
+
+				}
+				return graphConvertValueToString.apply(this, arguments);
+			};
+
+
+
+			var parent = graph.getDefaultParent();
+
+
+			graph.getModel().beginUpdate();
+			var v1 = graph.insertVertex(parent, null, {
+					custom: 11
+				}, 20, 20, 300, 240,
+				'overflow=fill;fillColor=none;strokeOpacity=0;');
+			var v2 = graph.insertVertex(parent, null, 'Hello,', 480, 320, 300, 240,
+				'');
+			var e1 = graph.insertEdge(parent, null, '', v1, v2);
+			graph.getModel().endUpdate();
+
+
+			document.body.appendChild(mxUtils.button('+', function () {
+				graph.zoomIn();
+			}));
+			document.body.appendChild(mxUtils.button('-', function () {
+				graph.zoomOut();
+			}));
+		};
+	</script>
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+
+<body onload="main(document.getElementById('graphContainer'))">
+
+	<!-- Creates a container for the graph with a grid wallpaper -->
+	<div id="graphContainer" style="position:relative;overflow:hidden;width:821px;height:661px;cursor:default;border:1px solid gray;">
+	</div>
+
+</body>
+
+</html>

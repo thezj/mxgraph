@@ -1,0 +1,171 @@
+<!--
+  Copyright (c) 2006-2013, JGraph Ltd
+  
+  Autolayout example for mxGraph. This example demonstrates running
+  and animating a layout algorithm after every change to a graph.
+-->
+<html>
+
+<head>
+	<title>Auto layout example for mxGraph</title>
+
+	<!-- Sets the basepath for the library if not in same directory -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+
+	<!-- Example code -->
+	<script type="text/javascript">
+		// Program starts here. Creates a sample graph in the
+		// DOM node with the specified ID. This function is invoked
+		// from the onLoad event handler of the document (see below).
+		function main(container) {
+
+			// mxEvent.disableContextMenu(container);
+			//Installs the listeners for the given mxCellState, mxCellOverlay and mxShape that represents the overlay.
+			var mxCellRendererInstallCellOverlayListeners = mxCellRenderer.prototype.installCellOverlayListeners;
+			mxCellRenderer.prototype.installCellOverlayListeners = function (state, overlay, shape) {
+				mxCellRendererInstallCellOverlayListeners.apply(this, arguments);
+
+				//state是被覆盖的cell的状态
+				//shape就是overlay的dom
+				//overlay是overlay的数据model
+				// console.log(state, overlay, shape)
+
+				//给overlay的node添加pointerdown事件 使overlay dispatch一个pointerdown事件带上当前overlay的cell
+				// mxEvent.addListener(shape.node, 'pointerdown', function (evt) {
+				// 	overlay.fireEvent(new mxEventObject('pointerdown', 'event', evt, 'state', state));
+				// });
+
+			};
+
+
+			// Creates the graph inside the given container
+			var graph = new mxGraph(container);
+			graph.setConnectable(true);
+			//设置可以拖动地图
+			// Zooming and panning are navigational tools for exploring 2 D and 3 D information
+			//To use the left mousebutton for panning without interfering with cell moving and resizing
+			// graph.setPanning(true);
+			//使用鼠标左键panning
+			// graph.panningHandler.useLeftButtonForPanning = true;
+			// graph.setAllowDanglingEdges(false);
+			// graph.connectionHandler.select = false;
+			//调整view的边距
+			// graph.view.setTranslate(20, 20);
+
+			// Enables rubberband selection
+			// new mxRubberband(graph);
+
+			// Gets the default parent for inserting new cells. This
+			// is normally the first child of the root (ie. layer 0).
+			var parent = graph.getDefaultParent();
+
+			//封装一个添加overlay的方法 动态给新增的overlay添加事件处理
+			var addOverlay = function (cell) {
+				// Creates a new overlay with an image and a tooltip
+				//创建一个overlay从mxImage
+				var overlay = new mxCellOverlay(new mxImage('images/add.png', 14, 14));
+
+				// Installs a handler for clicks on the overlay
+				//给overlay添加一个鼠标点击事件处理函数			
+				overlay.addListener(mxEvent.CLICK, function (sender, evt2) {
+					// graph.clearSelection();
+					var geo = graph.getCellGeometry(cell);
+					let v2;
+					executeLayout(_ => {
+						v2 = graph.insertVertex(parent, null, 'World!', geo.x, geo.y, 80, 30);
+						addOverlay(v2);
+						// graph.view.refresh(v2);
+						graph.insertEdge(parent, null, '', cell, v2);
+					});
+				});
+
+				graph.addCellOverlay(cell, overlay);
+
+
+				// Special CMS event
+				//使鼠标拖动overlay也能实现连接线connection的功能
+				// overlay.addListener('pointerdown', function (sender, eo) {
+				// 	var evt2 = eo.getProperty('event');
+				// 	var state = eo.getProperty('state');
+
+				// 	graph.popupMenuHandler.hideMenu();
+				// 	graph.stopEditing(false);
+
+				// 	var pt = mxUtils.convertPoint(graph.container,
+				// 		mxEvent.getClientX(evt2), mxEvent.getClientY(evt2));
+				// 	graph.connectionHandler.start(state, pt.x, pt.y);
+				// 	graph.isMouseDown = true;
+				// 	graph.isMouseTrigger = mxEvent.isMouseEvent(evt2);
+				// 	mxEvent.consume(evt2);
+				// });
+
+				// Sets the overlay for the cell in the graph
+				//添加覆盖物
+			}
+
+			// Adds cells to the model in a single step
+			graph.getModel().beginUpdate();
+			var v1 = graph.insertVertex(parent, null, 'Hello,', 0, 0, 80, 30);
+			addOverlay(v1);
+
+			// Updates the display
+			graph.getModel().endUpdate();
+
+
+			//A hierarchical layout algorithm.
+			///使用一个层级布局
+			var layout = new mxHierarchicalLayout(graph, mxConstants.DIRECTION_NORTH);
+			console.log(layout)
+
+			var executeLayout = function (change) {
+				graph.getModel().beginUpdate();
+				if (change) {
+					change()
+				}
+				//执行一个自动的层级布局，传入一个根节点和可选起始节点
+				layout.execute(graph.getDefaultParent());
+				//morph动画过后结束绘图
+				var morph = new mxMorphing(graph);
+				morph.addListener(mxEvent.DONE, function () {
+					graph.getModel().endUpdate();
+				});
+				morph.startAnimation();
+			};
+
+			var edgeHandleConnect = mxEdgeHandler.prototype.connect;
+			mxEdgeHandler.prototype.connect = function () {
+				edgeHandleConnect.apply(this, arguments);
+				console.log(this)
+				executeLayout();
+			};
+
+
+			//当cell改变大小的时候执行层级布局
+			graph.resizeCell = function () {
+				mxGraph.prototype.resizeCell.apply(this, arguments);
+				executeLayout();
+			};
+
+			//当连接事件发生的时候处理层级布局
+			graph.connectionHandler.addListener(mxEvent.CONNECT, function () {
+				executeLayout();
+			});
+		}
+	</script>
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+
+<body onload="main(document.getElementById('graphContainer'))">
+
+	<!-- Creates a container for the graph with a grid wallpaper -->
+	<div id="graphContainer" style="position:relative;overflow:hidden;width:821px;height:641px;background:url('editors/images/grid.gif');cursor:default;">
+	</div>
+</body>
+
+</html>

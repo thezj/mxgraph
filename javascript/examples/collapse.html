@@ -1,0 +1,74 @@
+<!--
+  Copyright (c) 2006-2013, JGraph Ltd
+  
+  Collapse example for mxGraph. This example demonstrates changing
+  the style of a cell based on its collapsed state.
+-->
+<html>
+
+<head>
+	<title>Collapse example for mxGraph</title>
+
+	<!-- Sets the basepath for the library if not in same directory -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+
+	<!-- Example code -->
+	<script type="text/javascript">
+		// Program starts here. Creates a sample graph in the
+		// DOM node with the specified ID. This function is invoked
+		// from the onLoad event handler of the document (see below).
+		function main(container) {
+
+			var graph = new mxGraph(container);
+			var parent = graph.getDefaultParent();
+
+			// Extends mxGraphModel.getStyle to show an image when collapsed
+			//拓展getstyle方法，在cell collapse折叠的时候 显示一张图片
+			// var modelGetStyle = graph.model.getStyle;
+			// graph.model.getStyle = function (cell) {
+			// 	var style = modelGetStyle.apply(this, arguments);
+			// 	if (this.isCollapsed(cell)) {
+			// 		style = style + ';shape=image;image=https://www.baidu.com/img/bd_logo1.png;noLabel=1;'
+			// 	}
+			// 	return style;
+			// };
+			let os
+			let cp = graph.model.collapsedStateForCellChanged
+			graph.model.collapsedStateForCellChanged = function (cell, collapsed) {
+				if (!cell.collapsed) {
+					if (!os) os = cell.style
+					graph.model.setStyle(cell, cell.style + ';shape=image;image=https://www.baidu.com/img/bd_logo1.png;noLabel=1;')
+
+				} else if (cell.value == 'Container') {
+					graph.model.setStyle(cell, os)
+
+				}
+				cp.apply(this, arguments)
+			}
+
+
+			graph.getModel().beginUpdate();
+			var v1 = graph.insertVertex(parent, null, 'Container', 20, 20, 200, 200);
+			//alternate 交替显示时的cell的几何大小
+			v1.geometry.alternateBounds = new mxRectangle(0, 0, 200, 200);
+			var v11 = graph.insertVertex(v1, null, 'Hello,', 10, 40, 120, 80);
+			graph.getModel().endUpdate();
+		};
+	</script>
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+
+<body onload="main(document.getElementById('graphContainer'))">
+
+	<!-- Creates a container for the graph with a grid wallpaper -->
+	<div id="graphContainer" style="position:relative;overflow:hidden;width:321px;height:241px;background:url('editors/images/grid.gif');cursor:default;">
+	</div>
+</body>
+
+</html>

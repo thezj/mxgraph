@@ -1,0 +1,120 @@
+<!--
+  Copyright (c) 2006-2013, JGraph Ltd
+  
+  HTML label example for mxGraph. This example demonstrates using
+  HTML labels that are connected to the state of the user object.
+-->
+<html>
+
+<head>
+	<title>HTML label example for mxGraph</title>
+
+	<!-- Sets the basepath for the library if not in same directory -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+
+
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+
+<body onload="">
+
+	<!-- Creates a container for the graph with a grid wallpaper -->
+	<div id="graphContainer" style="position:relative;overflow:hidden;width:321px;height:241px;background:url('editors/images/grid.gif');cursor:default;">
+	</div>
+	<!-- Example code -->
+	<script type="text/javascript">
+		let container = document.getElementById('graphContainer')
+		var graph = new mxGraph(container);
+
+
+
+
+		// Creates a user object that stores the state
+		var doc = mxUtils.createXmlDocument();
+		var obj = doc.createElement('UserObject');
+		obj.setAttribute('label', 'Hello, World!');
+		obj.setAttribute('checked', 'false');
+
+		// Adds optional caching for the HTML label
+		var cached = false;
+
+
+
+		// Overrides method to provide a cell label in the display
+		graph.convertValueToString = function (cell) {
+			if (cell.value.nodeName && cell.value.nodeName.toLowerCase() == 'userobject') {
+				// Returns a DOM for the label
+				//使用lable返回一个dom
+				var div = document.createElement('div');
+				div.innerHTML = cell.getAttribute('label');
+				var checkbox = document.createElement('input');
+				checkbox.setAttribute('type', 'checkbox');
+				if (cell.getAttribute('checked') == 'true') {
+					checkbox.setAttribute('checked', 'checked');
+					checkbox.defaultChecked = true;
+				}
+				div.appendChild(checkbox);
+
+				// Writes back to cell if checkbox is clicked
+				//如果checkbox被点击了 那么反应到graph的cell上
+				// mxEvent.addListener(checkbox, 'change', function (evt) {
+				// 	var elt = cell.value.cloneNode(true);
+				// 	console.log(cell, cell.value)
+				// 	elt.setAttribute('checked', (checkbox.checked) ? 'true' : 'false');
+				// 	graph.model.setValue(cell, elt);
+				// });
+
+				return div;
+			} else {
+				return cell.value;
+			}
+
+		};
+
+		// Overrides method to store a cell label in the model
+		//给celllabelchanged 事件处理函数添加逻辑 保证新的value 继续包含原有结构，不然只有输入的一段字符串
+		var cellLabelChanged = graph.cellLabelChanged;
+		graph.cellLabelChanged = function (cell, newValue, autoSize) {
+			var elt = cell.value.cloneNode(true);
+			elt.setAttribute('label', newValue)
+			newValue = elt;
+			cellLabelChanged.apply(this, arguments);
+		};
+
+		// Overrides method to create the editing value
+		//给celleditingvalue 处理函数添加逻辑，在编辑label只读取node的label的字符串
+		var getEditingValue = graph.getEditingValue;
+		graph.getEditingValue = function (cell) {
+			return cell.getAttribute('label');
+		};
+
+		var parent = graph.getDefaultParent();
+		graph.insertVertex(parent, null, obj, 20, 20, 80, 60);
+
+
+
+
+		// // Undo/redo
+		// var undoManager = new mxUndoManager();
+		// graph.getModel().addListener(mxEvent.UNDO, (sender, evt) => {
+		// 	undoManager.undoableEditHappened(evt.getProperty('edit'));
+		// });
+		// graph.getView().addListener(mxEvent.UNDO, (sender, evt) => {
+		// 	undoManager.undoableEditHappened(evt.getProperty('edit'));
+		// });
+		// document.body.appendChild(mxUtils.button('Undo', function () {
+		// 	undoManager.undo();
+		// }));
+		// document.body.appendChild(mxUtils.button('Redo', function () {
+		// 	undoManager.redo();
+		// }));
+	</script>
+</body>
+
+</html>
