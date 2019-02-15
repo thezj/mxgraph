@@ -37,7 +37,7 @@
 
 
 		function main(container) {
-			var graph = new mxGraph(container);
+			window.graph = new mxGraph(container);
 			var parent = graph.getDefaultParent();
 			graph.getModel().beginUpdate();
 			//添加定义的形状和样式

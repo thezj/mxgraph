@@ -4,6 +4,7 @@
 /**
  * Editor constructor executed on page load.
  */
+
 Editor = function (chromeless, themes, model, graph, editable) {
 	mxEventSource.call(this);
 	this.chromeless = (chromeless != null) ? chromeless : this.chromeless;
@@ -16,23 +17,124 @@ Editor = function (chromeless, themes, model, graph, editable) {
 	 * 
 	 * 
 	 */
-	
+
+	//获取cell所属的部件uid
+	window.getCellUid = cell => {
+
+		if (cell.getAttribute('uid')) {
+			return cell.getAttribute('uid')
+		} else {
+			if (cell.parent != null) {
+				return getCellUid(cell.parent)
+			} else {
+				return null
+			}
+		}
+
+	}
+
+	//获取部件的自定义属性
+	window.getCellAttributes = cell => {
+		let attr = {}
+		cell.getAttribute('uid') ? attr.uid = cell.getAttribute('uid') : null
+		cell.getAttribute('status') ? attr.status = cell.getAttribute('status') : null
+		cell.getAttribute('type') ? attr.type = cell.getAttribute('type') : null
+		cell.getAttribute('index') ? attr.index = cell.getAttribute('index') : null
+		return attr
+	}
+
+	window.parkequip = {}
+
+
 	//把graph引用暴露到全局
 	window.graph = this.graph
 	//禁止框选
-	// mxRubberband.prototype.setEnabled(false)
+	mxRubberband.prototype.setEnabled(false)
 	//禁止选中
-	// mxGraph.prototype.cellsSelectable = false
+	mxGraph.prototype.cellsSelectable = false
 	//禁止连接
-	// mxCell.prototype.connectable = false
+	mxCell.prototype.connectable = false
 	//禁止双击编辑label
-	// mxGraph.prototype.cellsEditable = false
+	mxGraph.prototype.cellsEditable = false
 	//禁止移动
-	// mxGraph.prototype.cellsMovable = false
-	
+	mxGraph.prototype.cellsMovable = false
+	mxGraph.prototype.cellsDisconnectable = true
 
 
-	
+	//把所有部件存放到window.parkequip中
+	//给所有的作用区域添加手型样式
+
+	let cellc = mxCellRenderer.prototype.createShape
+	mxCellRenderer.prototype.createShape = function () {
+
+		if (arguments[0].cell.getAttribute('uid')) {
+			window.parkequip[arguments[0].cell.getAttribute('uid')] = arguments[0].cell
+		}
+
+		if (arguments[0].cell.getAttribute('name') && arguments[0].cell.getAttribute('name') == 'taparea') {
+			setTimeout(i => {
+				window.graph.view.getState(arguments[0].cell).setCursor('pointer')
+			}, 0)
+
+		}
+		return cellc.apply(this, arguments);
+	}
+
+
+
+	window.graph.addMouseListener({
+		mouseDown: function (sender, evt) {
+			//过滤鼠标右键
+			if (evt.evt.button == 2) return
+			//过滤非点击区域
+			if (evt.sourceState && getCellUid(evt.sourceState.cell)) {
+				console.log(getCellAttributes(new graphx().getEquip(getCellUid(evt.sourceState.cell))))
+			}
+			mxLog.debug('mouseDown');
+		},
+		mouseMove: function (sender, evt) {
+			mxLog.debug('mouseMove');
+		},
+		mouseUp: function (sender, evt) {
+			mxLog.debug('mouseUp');
+		}
+	})
+
+
+	/**
+	 * 
+	 * 拓展一个cell的方法，遍历获取cell下级的cell,通过property的中的name获取
+	 * 
+	 * 
+	 */
+
+	mxCell.prototype.getSubCell = function (name) {
+
+		if (this.children) {
+
+			let loop = cells => {
+				let cell = null
+				for (let i = 0; i < cells.length; i++) {
+					if (cells[i].children) {
+						cell = loop(cells[i].children)
+					} else if (cells[i].getAttribute('name') == name) {
+						cell = cells[i]
+						break;
+					}
+				}
+				return cell
+			}
+			return loop(this.children)
+
+		} else {
+			return null
+		}
+
+	}
+
+
+
+
 	/**
 	 * 
 	 * 
@@ -221,7 +323,7 @@ Editor.ctrlKey = (mxClient.IS_MAC) ? 'Cmd' : 'Ctrl';
  * Specifies if the diagram should be saved automatically if possible. Default
  * is true.
  */
-Editor.popupsAllowed = true;
+Editor.popupsAllowed = false;
 
 /**
  * Editor inherits from mxEventSource
@@ -373,15 +475,20 @@ Editor.prototype.createGraph = function (themes, model) {
  */
 Editor.prototype.resetGraph = function () {
 	this.graph.gridEnabled = !this.isChromelessView() || urlParams['grid'] == '1';
+	this.graph.gridEnabled = 0
+
 	this.graph.graphHandler.guidesEnabled = true;
-	this.graph.setTooltips(true);
-	this.graph.setConnectable(true);
+	//禁止鼠标移上显示lable提示
+	this.graph.setTooltips(false);
+	this.graph.setConnectable(false);
 	this.graph.foldingEnabled = true;
 	this.graph.scrollbars = this.graph.defaultScrollbars;
 	this.graph.pageVisible = this.graph.defaultPageVisible;
+	//默认不显示page 和pagebreaks
+	this.graph.pageVisible = false;
 	this.graph.pageBreaksVisible = this.graph.pageVisible;
 	this.graph.preferPageSize = this.graph.pageBreaksVisible;
-	this.graph.background = null;
+	this.graph.background = '#000';
 	this.graph.pageScale = mxGraph.prototype.pageScale;
 	this.graph.pageFormat = mxGraph.prototype.pageFormat;
 	this.graph.currentScale = 1;
@@ -578,8 +685,9 @@ Editor.prototype.createUndoManager = function () {
 		this.undoListener.apply(this, arguments);
 	});
 
-	graph.getModel().addListener(mxEvent.UNDO, listener);
-	graph.getView().addListener(mxEvent.UNDO, listener);
+	//取消绑定undo事件的监听的方法
+	// graph.getModel().addListener(mxEvent.UNDO, listener);
+	// graph.getView().addListener(mxEvent.UNDO, listener);
 
 	// Keeps the selection in sync with the history
 	var undoHandler = function (sender, evt) {

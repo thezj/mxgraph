@@ -1621,6 +1621,7 @@ mxEditor.prototype.createGraph = function ()
 {
 	var graph = new mxGraph(null, null, this.graphRenderHint);
 	
+
 	// Enables rubberband, tooltips, panning
 	graph.setTooltips(true);
 	graph.setPanning(true);

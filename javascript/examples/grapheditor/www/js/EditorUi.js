@@ -169,6 +169,8 @@ EditorUi = function(editor, container, lightbox)
 	
 	this.hoverIcons.isResetEvent = function(evt, allowShift)
 	{
+		//取消hovericon
+		return true
 		return spaceKeyPressed || hoverIconsIsResetEvent.apply(this, arguments);
 	};
 	
@@ -387,10 +389,10 @@ EditorUi = function(editor, container, lightbox)
     // Installs context menu
 	if (this.menus != null)
 	{
-		graph.popupMenuHandler.factoryMethod = mxUtils.bind(this, function(menu, cell, evt)
-		{
-			this.menus.createPopupMenu(menu, cell, evt);
-		});
+		// graph.popupMenuHandler.factoryMethod = mxUtils.bind(this, function(menu, cell, evt)
+		// {
+		// 	this.menus.createPopupMenu(menu, cell, evt);
+		// });
 	}
 	
 	// Hides context menu
@@ -2930,6 +2932,8 @@ EditorUi.prototype.refresh = function(sizeDidChange)
 	
 	this.diagramContainer.style.left = (this.hsplit.parentNode != null) ? (effHsplitPosition + this.splitSize) + 'px' : '0px';
 	this.diagramContainer.style.top = this.sidebarContainer.style.top;
+	this.diagramContainer.style.left = '0px';
+	this.diagramContainer.style.top = '0px';
 	this.footerContainer.style.height = this.footerHeight + 'px';
 	this.hsplit.style.top = this.sidebarContainer.style.top;
 	this.hsplit.style.bottom = (this.footerHeight + off) + 'px';
@@ -2959,6 +2963,9 @@ EditorUi.prototype.refresh = function(sizeDidChange)
 		}
 		
 		this.diagramContainer.style.height = diagramHeight + 'px';
+		this.diagramContainer.style.width = '100%'
+		this.diagramContainer.style.height = '100%'
+		this.diagramContainer.style.position = 'fixed'
 		this.hsplit.style.height = diagramHeight + 'px';
 	}
 	else
@@ -2969,6 +2976,7 @@ EditorUi.prototype.refresh = function(sizeDidChange)
 		}
 		
 		this.diagramContainer.style.right = fw + 'px';
+		this.diagramContainer.style.right = 0 + 'px';
 		var th = 0;
 		
 		if (this.tabContainer != null)
@@ -2980,7 +2988,7 @@ EditorUi.prototype.refresh = function(sizeDidChange)
 		
 		this.sidebarContainer.style.bottom = (this.footerHeight + sidebarFooterHeight + off) + 'px';
 		this.formatContainer.style.bottom = (this.footerHeight + off) + 'px';
-		this.diagramContainer.style.bottom = (this.footerHeight + off + th) + 'px';
+		this.diagramContainer.style.bottom = 0 + 'px';
 	}
 	
 	if (sizeDidChange)
@@ -3021,6 +3029,10 @@ EditorUi.prototype.createDivs = function()
 	this.formatContainer.style.right = '0px';
 	this.formatContainer.style.zIndex = '1';
 	this.diagramContainer.style.right = ((this.format != null) ? this.formatWidth : 0) + 'px';
+	this.diagramContainer.style.left = '0px'
+	this.diagramContainer.style.top = '0px'
+	this.diagramContainer.style.right = '0px'
+	this.diagramContainer.style.bottom = '0px'
 	this.footerContainer.style.left = '0px';
 	this.footerContainer.style.right = '0px';
 	this.footerContainer.style.bottom = '0px';
@@ -3079,7 +3091,7 @@ EditorUi.prototype.createUi = function()
 		this.menubar.container.appendChild(this.statusContainer);
 		
 		// Inserts into DOM
-		this.container.appendChild(this.menubarContainer);
+		// this.container.appendChild(this.menubarContainer);
 	}
 
 	// Creates the sidebar
@@ -3087,7 +3099,7 @@ EditorUi.prototype.createUi = function()
 	
 	if (this.sidebar != null)
 	{
-		this.container.appendChild(this.sidebarContainer);
+		// this.container.appendChild(this.sidebarContainer);
 	}
 	
 	// Creates the format sidebar
@@ -3095,7 +3107,7 @@ EditorUi.prototype.createUi = function()
 	
 	if (this.format != null)
 	{
-		this.container.appendChild(this.formatContainer);
+		// this.container.appendChild(this.formatContainer);
 	}
 	
 	// Creates the footer
@@ -3104,19 +3116,19 @@ EditorUi.prototype.createUi = function()
 	if (footer != null)
 	{
 		this.footerContainer.appendChild(footer);
-		this.container.appendChild(this.footerContainer);
+		// this.container.appendChild(this.footerContainer);
 	}
 
 	if (this.sidebar != null && this.sidebarFooterContainer)
 	{
-		this.container.appendChild(this.sidebarFooterContainer);		
+		// this.container.appendChild(this.sidebarFooterContainer);		
 	}
 
 	this.container.appendChild(this.diagramContainer);
 
 	if (this.container != null && this.tabContainer != null)
 	{
-		this.container.appendChild(this.tabContainer);
+		// this.container.appendChild(this.tabContainer);
 	}
 
 	// Creates toolbar
@@ -3125,11 +3137,11 @@ EditorUi.prototype.createUi = function()
 	if (this.toolbar != null)
 	{
 		this.toolbarContainer.appendChild(this.toolbar.container);
-		this.container.appendChild(this.toolbarContainer);
+		// this.container.appendChild(this.toolbarContainer);
 	}
 
 	// HSplit
-	if (this.sidebar != null)
+	if (this.sidebar = null)
 	{
 		this.container.appendChild(this.hsplit);
 		

@@ -82,8 +82,9 @@
 			var bundle = mxResources.getDefaultBundle(RESOURCE_BASE, mxLanguage) ||
 				mxResources.getSpecialBundle(RESOURCE_BASE, mxLanguage);
 
+			let defualtxmldoc = 'station.xml'
 			// Fixes possible asynchronous requests
-			mxUtils.getAll([bundle, STYLE_PATH + '/default.xml'], function (xhr) {
+			mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (xhr) {
 				// Adds bundle text to resources
 				mxResources.parse(xhr[0].getText());
 
@@ -91,8 +92,22 @@
 				var themes = new Object();
 				themes[Graph.prototype.defaultThemeName] = xhr[1].getDocumentElement();
 
-				// Main
+
 				new EditorUi(new Editor(urlParams['chrome'] == '0', themes));
+
+				let codec = new mxCodec(xhr[2])
+				codec.decode(xhr[2].getDocumentElement(), window.graph.getModel())
+				
+				//xml选然后执行一些初始化
+				//设置视图位置
+				let graphcontainer = document.querySelector('.geDiagramContainer')
+				graphcontainer.scrollLeft = (graphcontainer.scrollWidth - window.innerWidth)/2
+				graphcontainer.scrollTop = (graphcontainer.scrollHeight - window.innerHeight)/2 - 300
+
+				//添加反馈层的样式
+				
+
+
 			}, function () {
 				document.body.innerHTML =
 					'<center style="margin-top:10%;">Error loading resource files. Please check browser console.</center>';
