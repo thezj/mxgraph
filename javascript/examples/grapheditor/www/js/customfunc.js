@@ -28,8 +28,10 @@ class graphx {
     setTurnoutStatus(uid, status) {
         let cell = this.getEquip(uid)
 
-        //初始化零件的闪烁状态
-        cell.partvisible = {}
+        //初始化零件的闪烁状态为不闪烁
+        if (!cell.partvisible) {
+            cell.partvisible = {}
+        }
         cell.partvisible['reverse'] = false
         cell.partvisible['direct'] = false
         cell.partvisible['label'] = false

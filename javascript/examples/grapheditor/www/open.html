@@ -184,14 +184,14 @@
 		{
 			var editLink = document.getElementById('editLink');
 			var openButton = document.getElementById('openButton');
-			openButton.value = window.parent.mxResources.get(window.parent.openKey || 'open');
+			// openButton.value = window.parent.mxResources.get(window.parent.openKey || 'open');
 			var cancelButton = document.getElementById('cancelButton');
 			cancelButton.value = window.parent.mxResources.get('cancel');
 			var supportedText = document.getElementById('openSupported');
 			supportedText.innerHTML = window.parent.mxResources.get('openSupported');
 			var form = window.openForm || document.getElementById('openForm');
 
-			form.setAttribute('action', window.parent.OPEN_URL);
+			// form.setAttribute('action', window.parent.OPEN_URL);
 		}
 	};
 </script>

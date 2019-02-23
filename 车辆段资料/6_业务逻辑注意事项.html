@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>6.业务逻辑注意事项</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <link href="resources/css/jquery-ui-themes.css" type="text/css" rel="stylesheet"/>
+    <link href="resources/css/axure_rp_page.css" type="text/css" rel="stylesheet"/>
+    <link href="data/styles.css" type="text/css" rel="stylesheet"/>
+    <link href="files/6_业务逻辑注意事项/styles.css" type="text/css" rel="stylesheet"/>
+    <script src="resources/scripts/jquery-1.7.1.min.js"></script>
+    <script src="resources/scripts/jquery-ui-1.8.10.custom.min.js"></script>
+    <script src="resources/scripts/prototypePre.js"></script>
+    <script src="data/document.js"></script>
+    <script src="resources/scripts/prototypePost.js"></script>
+    <script src="files/6_业务逻辑注意事项/data.js"></script>
+    <script type="text/javascript">
+      $axure.utils.getTransparentGifPath = function() { return 'resources/images/transparent.gif'; };
+      $axure.utils.getOtherPath = function() { return 'resources/Other.html'; };
+      $axure.utils.getReloadPath = function() { return 'resources/reload.html'; };
+    </script>
+  </head>
+  <body>
+    <div id="base" class="">
+
+      <!-- Unnamed (Rectangle) -->
+      <div id="u874" class="ax_default _文本段落">
+        <div id="u874_div" class=""></div>
+        <div id="u874_text" class="text ">
+          <p><span>发车逻辑注意点：</span></p><p><span>由联锁表可知</span></p><p><span>发车 只有固定几根股道 具备 直接经过Xr/Xc口发车到转换轨的功能，</span></p><p><span>高大路停车场 只有工程车库S23 S24 S25具备。</span></p><p><span>板桥车辆段只有双周三月检线 X33 X34 X35 卸车线X36 工程车库X37 X38 X39 具备。</span></p><p><span>其他股道 只具备发车到Sr 或者Sc 信号机，再由Sr和Sc 根据目标转换轨选择对应出口发车。</span></p><p><span><br></span></p><p><span>从站场图可知，Sc对应上半部分股道 Sr对应下半部分股道。因此发车进路分为两部分：</span></p><p><span>第一，根据联锁表中车辆停放位置股道的发车进路，将车辆发送到Sc/Sr信号机。</span></p><p><span>第二，根据目标转换轨确定排列Sc/Sr信号机到哪个口的进路。</span></p><p><span>这样做的目的是优化发车效率，在计划不冲突的前提下，一条发车计划的第一部分完成后，</span></p><p><span>其他发车计划即可执行并排列第一部分进路。</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (Image) -->
+      <div id="u875" class="ax_default _图片_">
+        <img id="u875_img" class="img " src="images/6_业务逻辑注意事项/u875.png"/>
+      </div>
+
+      <!-- Unnamed (Image) -->
+      <div id="u876" class="ax_default _图片_">
+        <img id="u876_img" class="img " src="images/6_业务逻辑注意事项/u876.png"/>
+      </div>
+
+      <!-- Unnamed (Image) -->
+      <div id="u877" class="ax_default _图片_">
+        <img id="u877_img" class="img " src="images/6_业务逻辑注意事项/u877.png"/>
+      </div>
+
+      <!-- Unnamed (Image) -->
+      <div id="u878" class="ax_default _图片_">
+        <img id="u878_img" class="img " src="images/6_业务逻辑注意事项/u878.png"/>
+      </div>
+
+      <!-- Unnamed (Image) -->
+      <div id="u879" class="ax_default _图片_">
+        <img id="u879_img" class="img " src="images/6_业务逻辑注意事项/u879.png"/>
+      </div>
+
+      <!-- Unnamed (Group) -->
+      <div id="u880" class="ax_default" data-left="1801" data-top="776" data-width="389" data-height="852">
+
+        <!-- Unnamed (Image) -->
+        <div id="u881" class="ax_default _图片_">
+          <img id="u881_img" class="img " src="images/6_业务逻辑注意事项/u881.png"/>
+        </div>
+
+        <!-- Unnamed (Image) -->
+        <div id="u882" class="ax_default _图片_">
+          <img id="u882_img" class="img " src="images/6_业务逻辑注意事项/u882.png"/>
+        </div>
+      </div>
+
+      <!-- Unnamed (Group) -->
+      <div id="u883" class="ax_default" data-left="1208" data-top="776" data-width="526" data-height="854">
+
+        <!-- Unnamed (Image) -->
+        <div id="u884" class="ax_default _图片_">
+          <img id="u884_img" class="img " src="images/6_业务逻辑注意事项/u884.png"/>
+        </div>
+
+        <!-- Unnamed (Image) -->
+        <div id="u885" class="ax_default _图片_">
+          <img id="u885_img" class="img " src="images/6_业务逻辑注意事项/u885.png"/>
+        </div>
+      </div>
+
+      <!-- Unnamed (Rectangle) -->
+      <div id="u886" class="ax_default _文本段落">
+        <div id="u886_div" class=""></div>
+        <div id="u886_text" class="text ">
+          <p><span>折返进路注意点：</span></p><p><span>在编制调车计划时，工程车完成作业后回库所需要的折返进路不会出现在调车计划勾计划中。需要为工程车寻找空闲车库并计算回库所需折返进路的指令，保留在调车计划的指令集中。当完成摘挂 将排路指令发送给联锁系统，排出折返进路供工程车回库。</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (Rectangle) -->
+      <div id="u887" class="ax_default _文本段落">
+        <div id="u887_div" class=""></div>
+        <div id="u887_text" class="text ">
+          <p><span>洗车作业注意点：</span></p><p><span>洗车作业为 在车辆段有洗车作业时，首先值班员通过电话请求洗车，在得到洗车线同意后，洗车线值班员按下“同意洗车”按钮，站场图上同意洗车状态灯亮起。办理洗车线进路（如果有条件则先办理出库，再办理入库），列车进入洗车线作业。在洗车线值班员确认洗车作业结束，拔出“同意洗车”按钮后，站场图上“同意洗车”状态灯熄灭。</span></p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

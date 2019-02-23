@@ -1,0 +1,322 @@
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=5,IE=9" ><![endif]-->
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Grapheditor</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+
+	<link rel="stylesheet" type="text/css" href="styles/grapheditor.css">
+	<script type="text/javascript">
+		// Parses URL parameters. Supported parameters are:
+		// - lang=xy: Specifies the language of the user interface.
+		// - touch=1: Enables a touch-style user interface.
+		// - storage=local: Enables HTML5 local storage.
+		// - chrome=0: Chromeless mode.
+		var urlParams = (function (url) {
+			var result = new Object();
+			var idx = url.lastIndexOf('?');
+
+			if (idx > 0) {
+				var params = url.substring(idx + 1).split('&');
+
+				for (var i = 0; i < params.length; i++) {
+					idx = params[i].indexOf('=');
+
+					if (idx > 0) {
+						result[params[i].substring(0, idx)] = params[i].substring(idx + 1);
+					}
+				}
+			}
+
+			return result;
+		})(window.location.href);
+
+		// Default resources are included in grapheditor resources
+		mxLoadResources = false;
+	</script>
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	 crossorigin="anonymous">
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+	 crossorigin="anonymous"></script>
+	<script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+	 crossorigin="anonymous"></script>
+	<script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+	 crossorigin="anonymous"></script>
+	<script type="text/javascript" src="js/customfunc.js"></script>
+	<script type="text/javascript" src="js/lodash.min.js"></script>
+	<script type="text/javascript" src="js/underscore.json.js"></script>
+	<script type="text/javascript" src="js/Init.js"></script>
+	<script type="text/javascript" src="deflate/pako.min.js"></script>
+	<script type="text/javascript" src="deflate/base64.js"></script>
+	<script type="text/javascript" src="jscolor/jscolor.js"></script>
+	<script type="text/javascript" src="sanitizer/sanitizer.min.js"></script>
+	<script type="text/javascript" src="src/js/mxClient.js"></script>
+	<script type="text/javascript" src="js/EditorUi.js"></script>
+	<script type="text/javascript" src="js/Editor.js"></script>
+	<script type="text/javascript" src="js/Sidebar.js"></script>
+	<script type="text/javascript" src="js/Graph.js"></script>
+	<script type="text/javascript" src="js/Format.js"></script>
+	<script type="text/javascript" src="js/Shapes.js"></script>
+	<script type="text/javascript" src="js/Actions.js"></script>
+	<script type="text/javascript" src="js/Menus.js"></script>
+	<script type="text/javascript" src="js/Toolbar.js"></script>
+	<script type="text/javascript" src="js/Dialogs.js"></script>
+	<script type="text/javascript" src="js/way.js"></script>
+</head>
+
+<body>
+
+
+
+
+	<div class="graphbody" style="height:100%; width:100%; position:absolute; overflow: hidden;">
+		<style>
+			*{
+				margin:0;
+				padding:0;
+			}
+		</style>
+		<!-- 固定窗口 -->
+		<div style="overflow-y:auto; line-height: 20px; font-size: 14px; font-weight: bold; height:102px; z-index: 2; width:283px; position:absolute; left:0;top:0;background:red;">
+			<p way-repeat="alertlist" style="margin:0;padding:0; ">
+				<span way-data="time"></span><span way-data="content"></span>
+			</p>
+		</div>
+		<!-- 固定窗口 -->
+
+		<!-- 固定窗口 -->
+		<div style="overflow:hidden; line-height: 20px; font-size: 14px; font-weight: bold; height:16px; z-index: 2; width:100%; position:absolute; left:0;bottom:0;background:#eee;">
+			<div style="display:inline-block; position: relative; width:30%; background:#ddd;"> 2</div>
+			<div style="display:inline-block; position: relative; width:40%;"> 2</div>
+			<div style="display:inline-block; position: relative; width:29%; background:#ddd;">2019/12/12 10:10:10</div>
+		</div>
+		<!-- 固定窗口 -->
+
+		<!-- 固定窗口 -->
+
+		<div style="position:absolute; z-index: 2; left: 0; bottom:16px; width:100%; height:50px; ">
+			<button type="button" class="btn btn-light" id="groupbtn1">场引导总锁</button>
+			<button type="button" class="btn btn-light" id="groupbtn2">总取消</button>
+			<button type="button" class="btn btn-light">总人解</button>
+			<button type="button" class="btn btn-light">区故解</button>
+			<button type="button" class="btn btn-light">总定位</button>
+			<button type="button" class="btn btn-light">总反位</button>
+			<button type="button" class="btn btn-light">清除</button>
+			<button type="button" class="btn btn-light">单锁</button>
+			<button type="button" class="btn btn-light">单解</button>
+			<button type="button" class="btn btn-light">按钮封锁</button>
+			<button type="button" class="btn btn-light">按钮解封</button>
+			<button type="button" class="btn btn-light">道岔封锁</button>
+			<button type="button" class="btn btn-light">道岔解封</button>
+			<button type="button" class="btn btn-light">上电解锁</button>
+			<button type="button" class="btn btn-light">辅助菜单</button>
+			<button type="button" class="btn btn-light">分路不良</button>
+			<button type="button" class="btn btn-light">标记窗</button>
+			<div id="anchorkeyboard" style=" position: absolute; width:100%; height:1px; top:0px; left: 0px;">
+				<input id="hidden" type="text" style="display:none;">
+			</div>
+		</div>
+
+		<!-- 固定窗口 -->
+
+
+
+	</div>
+
+
+
+	<script type="text/javascript">
+		// Extends EditorUi to update I/O action states based on availability of backend
+		(function () {
+
+			//设置数据
+			way.set("alertlist", [{
+					time: "12-12 10:10:10",
+					content: '有个警报1'
+				},
+				{
+					time: "12-12 10:10:10",
+					content: '有个警报2'
+				}, {
+					time: "12-12 10:10:10",
+					content: '有个警报3'
+				},
+			]);
+
+
+			/**
+			 * 
+			 * 拓展一个cell的方法，遍历获取cell下级的cell,通过property的中的name获取
+			 * 
+			 * 
+			 */
+
+			mxCell.prototype.getSubCell = function (name) {
+
+				if (this.children) {
+					let loop = cells => {
+						let cellarray = []
+						for (let i = 0; i < cells.length; i++) {
+							if (cells[i].children) {
+								cellarray.concat(loop(cells[i].children))
+							} else if (cells[i].getAttribute('name') == name) {
+								cellarray.push(cells[i])
+							}
+						}
+						return cellarray
+					}
+					return loop(this.children)
+				} else {
+					return null
+				}
+			}
+
+
+			var editorUiInit = EditorUi.prototype.init;
+
+			EditorUi.prototype.init = function () {
+				editorUiInit.apply(this, arguments);
+				this.actions.get('export').setEnabled(false);
+			};
+
+			// Adds required resources (disables loading of fallback properties, this can only
+			// be used if we know that all keys are defined in the language specific file)
+			mxResources.loadDefaultBundle = false;
+			var bundle = mxResources.getDefaultBundle(RESOURCE_BASE, mxLanguage) ||
+				mxResources.getSpecialBundle(RESOURCE_BASE, mxLanguage);
+
+			let defualtxmldoc = 'station.xml'
+			// Fixes possible asynchronous requests
+			mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (xhr) {
+				// Adds bundle text to resources
+				mxResources.parse(xhr[0].getText());
+
+				// Configures the default graph theme
+				var themes = new Object();
+				themes[Graph.prototype.defaultThemeName] = xhr[1].getDocumentElement();
+				new EditorUi(new Editor(urlParams['chrome'] == '0', themes), document.querySelector('.graphbody'));
+
+				/**
+				 * 
+				 * 引入xml后初始化配置和显示特性
+				 * 
+				 * 
+				 */
+
+				window.graph.importGraphModel(xhr[2].getDocumentElement())
+				//获取cell
+				window.getCellUid = cell => {
+
+					if (cell.getAttribute('uid')) {
+						return cell.getAttribute('uid')
+					} else {
+						if (cell.parent != null) {
+							return getCellUid(cell.parent)
+						} else {
+							return null
+						}
+					}
+
+				}
+				window.getEquipCell = cell => {
+
+					if (cell.getAttribute('uid')) {
+						return cell
+					} else {
+						if (cell.parent != null) {
+							return getEquipCell(cell.parent)
+						} else {
+							return null
+						}
+					}
+
+				}
+				window.getNamedCell = cell => {
+
+					if (cell.getAttribute('name')) {
+						return cell
+					} else {
+						if (cell.parent != null) {
+							return getNamedCell(cell.parent)
+						} else {
+							return null
+						}
+					}
+
+				}
+
+
+				window.parkequip = {}
+				window.graph.setCellsSelectable(false)
+				window.graph.setCellsMovable(false)
+
+
+				for (let i in window.graph.getModel().cells) {
+					let cell = window.graph.getModel().cells[i]
+					//如果发现uid属性则加入全局存放
+					if (cell.getAttribute('uid')) {
+						window.parkequip[cell.getAttribute('uid')] = cell
+						//给所有部件的label添加文字
+						cell.getSubCell('label')[0].setAttribute('label', cell.getAttribute('uid'))
+					}
+
+					//给带有name属性的cell添加手势
+					if (cell.getAttribute('name')) {
+						setTimeout(i => {
+							if (window.graph.view.getState(cell)) window.graph.view.getState(cell).setCursor('pointer')
+						}, 0)
+
+					}
+					//处理所有edge
+					if (cell.edge && cell.target) {
+						cell.setVisible(0)
+					}
+				}
+
+
+				//注册graph的鼠标事件处理
+				window.graph.addMouseListener({
+					mouseDown: function (sender, evt) {
+						//过滤鼠标右键
+						if (evt.evt.button == 2) return
+						//过滤非点击区域
+						if (evt.sourceState && getCellUid(evt.sourceState.cell)) {
+							console.log('点击零件：', evt.sourceState.cell.getAttribute('name'), evt.sourceState.cell.getAttribute('type'))
+						}
+
+
+						mxLog.debug('mouseDown');
+					},
+					mouseMove: function (sender, evt) {
+						mxLog.debug('mouseMove');
+					},
+					mouseUp: function (sender, evt) {
+						mxLog.debug('mouseUp');
+					}
+				})
+
+
+
+				window.graph.refresh()
+				//滚动视图定位到某个cell
+				window.graph.scrollCellToVisible(parkequip['s10'], 1)
+
+
+
+
+
+			}, function () {
+				document.body.innerHTML =
+					'<center style="margin-top:10%;">Error loading resource files. Please check browser console.</center>';
+			});
+		})();
+	</script>
+
+
+</body>
+
+</html>
