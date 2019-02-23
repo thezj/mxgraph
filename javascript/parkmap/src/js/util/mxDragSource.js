@@ -572,7 +572,7 @@ mxDragSource.prototype.dragEnter = function(graph, evt)
 	
 	if (this.highlightDropTargets)
 	{
-		this.currentHighlight = new mxCellHighlight(graph, mxConstants.DROP_TARGET_COLOR);
+		this.currentHighlight = new mxCellHighlight(graph, mxConstants.DROP_TARGET_COLOR,13);
 	}
 	
 	// Consumes all events in the current graph before they are fired
@@ -634,12 +634,18 @@ mxDragSource.prototype.dragOver = function(graph, evt)
 		graph.scrollPointToVisible(x, y, graph.autoExtend);
 	}
 
+	//如果拖拽目标是组就不显示高亮，画出的组是乱的一个边框
 	// Highlights the drop target under the mouse
-	if (this.currentHighlight != null && graph.isDropEnabled())
+	if (this.currentHighlight != null && graph.isDropEnabled() && this.getDropTarget(graph, x, y, evt) &&  !this.getDropTarget(graph, x, y, evt).children)
 	{
 		this.currentDropTarget = this.getDropTarget(graph, x, y, evt);
 		var state = graph.getView().getState(this.currentDropTarget);
+
 		this.currentHighlight.highlight(state);
+		this.findtargetcell = this.currentDropTarget
+	}else{
+		this.currentHighlight.hide()
+		this.findtargetcell = null
 	}
 
 	// Updates the location of the preview

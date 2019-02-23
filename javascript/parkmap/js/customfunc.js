@@ -240,3 +240,240 @@ class graphx {
         this.graph.refresh(cell)
     }
 }
+
+/**
+ * 
+ * graph操作相关的内容都放到graphAction对象
+ * 
+ */
+
+window.graphAction = {
+    //0：当前空闲没有操作
+    status: 0,
+    //操作开始时间，超过失效
+    startTime: null,
+}
+
+/**
+ * 
+ * 
+ * 初始化graph
+ * 
+ * 
+ */
+
+
+
+
+//设置数据
+// way.set("alertlist", [{
+// 		time: "12-12 10:10:10",
+// 		content: '有个警报1'
+// 	},
+// 	{
+// 		time: "12-12 10:10:10",
+// 		content: '有个警报2'
+// 	}, {
+// 		time: "12-12 10:10:10",
+// 		content: '有个警报3'
+// 	},
+// ]);
+
+
+/**
+ * 
+ * 拓展一个cell的方法，遍历获取cell下级的cell,通过property的中的name获取
+ * 
+ * 
+ */
+
+mxCell.prototype.getSubCell = function (name) {
+
+    if (this.children) {
+        let loop = cells => {
+            let cellarray = []
+            for (let i = 0; i < cells.length; i++) {
+                if (cells[i].children) {
+                    cellarray.concat(loop(cells[i].children))
+                } else if (cells[i].getAttribute('name') == name) {
+                    cellarray.push(cells[i])
+                }
+            }
+            return cellarray
+        }
+        return loop(this.children)
+    } else {
+        return null
+    }
+}
+
+
+/**
+ * 
+ * 注册一些全局便利方法
+ * 
+ */
+
+//获取cell
+window.getCellUid = cell => {
+
+    if (cell.getAttribute('uid')) {
+        return cell.getAttribute('uid')
+    } else {
+        if (cell.parent != null) {
+            return getCellUid(cell.parent)
+        } else {
+            return null
+        }
+    }
+
+}
+window.getEquipCell = cell => {
+
+    if (cell.getAttribute('uid')) {
+        return cell
+    } else {
+        if (cell.parent != null) {
+            return getEquipCell(cell.parent)
+        } else {
+            return null
+        }
+    }
+
+}
+window.getNamedCell = cell => {
+
+    if (cell.getAttribute('name')) {
+        return cell
+    } else {
+        if (cell.parent != null) {
+            return getNamedCell(cell.parent)
+        } else {
+            return null
+        }
+    }
+
+}
+
+//存放全部部件细粒度到包含道岔 区段 和信号机 按钮
+window.parkequip = {}
+
+//配置mxConstants
+mxConstants.DROP_TARGET_COLOR = '#ff0'
+mxConstants.HIGHLIGHT_OPACITY = 70
+
+
+
+
+/**
+ * 
+ * 开始初始化EditorUI
+ * 
+ */
+
+var editorUiInit = EditorUi.prototype.init;
+
+EditorUi.prototype.init = function () {
+    editorUiInit.apply(this, arguments);
+    this.actions.get('export').setEnabled(false);
+};
+
+// Adds required resources (disables loading of fallback properties, this can only
+// be used if we know that all keys are defined in the language specific file)
+mxResources.loadDefaultBundle = false;
+var bundle = mxResources.getDefaultBundle(RESOURCE_BASE, mxLanguage) ||
+    mxResources.getSpecialBundle(RESOURCE_BASE, mxLanguage);
+
+let defualtxmldoc = 'station.xml'
+// Fixes possible asynchronous requests
+mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (xhr) {
+    // Adds bundle text to resources
+    mxResources.parse(xhr[0].getText());
+
+    // Configures the default graph theme
+    var themes = new Object();
+    themes[Graph.prototype.defaultThemeName] = xhr[1].getDocumentElement();
+    new EditorUi(new Editor(urlParams['chrome'] == '0', themes), document.querySelector('.graphbody'));
+
+    /**
+     * 
+     * 引入xml后初始化配置和显示特性
+     * 
+     * 
+     */
+
+    window.graph.importGraphModel(xhr[2].getDocumentElement())
+
+    window.graph.setCellsSelectable(false)
+    window.graph.setCellsMovable(false)
+
+
+    for (let i in window.graph.getModel().cells) {
+        let cell = window.graph.getModel().cells[i]
+        //如果发现uid属性则加入全局存放
+        if (cell.getAttribute('uid')) {
+            window.parkequip[cell.getAttribute('uid')] = cell
+            //给所有部件的label添加文字
+            cell.getSubCell('label')[0].setAttribute('label', cell.getAttribute('uid').toUpperCase())
+        }
+
+        //给带有name属性的cell添加手势
+        if (cell.getAttribute('name')) {
+            setTimeout(i => {
+                if (window.graph.view.getState(cell)) window.graph.view.getState(cell).setCursor('pointer')
+            }, 0)
+
+        }
+        //处理所有edge
+        if (cell.edge && cell.target) {
+            cell.setVisible(0)
+        }
+    }
+
+
+    //注册graph的鼠标事件处理
+    window.graph.addMouseListener({
+        mouseDown: function (sender, evt) {
+            //过滤鼠标右键
+            if (evt.evt.button == 2) return
+            //过滤非点击区域
+            if (evt.sourceState && getCellUid(evt.sourceState.cell)) {
+                console.log('点击部件：', getEquipCell(evt.sourceState.cell).getAttribute('uid'), getEquipCell(evt.sourceState.cell)
+                    .getAttribute('type'))
+                console.log('点击零件：', evt.sourceState.cell.getAttribute('name'), evt.sourceState.cell.getAttribute('type'))
+
+
+
+            }
+
+            mxLog.debug('mouseDown');
+        },
+        mouseMove: function (sender, evt) {
+            mxLog.debug('mouseMove');
+        },
+        mouseUp: function (sender, evt) {
+
+            mxLog.debug('mouseUp');
+        }
+    })
+
+
+
+    window.graph.refresh()
+    //滚动视图定位到某个cell
+    window.graph.scrollCellToVisible(parkequip['s10'], 1)
+
+
+    //添加拖拽图标
+
+    let dragcallback = function (graph, evt, cell, x, y) {
+        console.log(this.currentDropTarget)
+    }
+
+    mxUtils.makeDraggable(document.querySelector('#dragicons img'), window.graph, dragcallback, document.querySelector('#dragicons img').cloneNode(), -15, -15, false, false, true);
+
+
+}, function () {
+    document.body.innerHTML =
+        '<center style="margin-top:10%;">Error loading resource files. Please check browser console.</center>';
+});
