@@ -249,35 +249,148 @@ class graphx {
 
 window.graphAction = {
     //0：当前空闲没有操作
+    //1：列车进路
+    //2：调车进路
+    //3：引导进路
+    //4：进路取消
+    //5：总人解
+
     status: 0,
+    //当前命令stamp
+    actionMark: null,
+    //当前触发命令按钮路径
+    clickPath: [],
     //操作开始时间，超过失效
     startTime: null,
+    //计时函数
+    startCounting() {
+        this.startTime = Date.now()
+        let actionMark = Math.random()
+        this.actionMark = actionMark
+        setTimeout(i => {
+            if (this.actionMark != actionMark) return
+            this.resetStatus()
+        }, 15000)
+    },
+    //重置状态
+    resetStatus() {
+        this.startTime = null
+        this.status = 0
+        this.actionMark = Math.random()
+        this.clickPath = []
+    },
+    //发送命令重置状态
+    commitAction() {
+        console.log('执行命令：', this.status, this.clickPath)
+        this.resetStatus()
+    },
+    //按钮点击处理
+    buttonClick(equip, button, e) {
+
+        //空闲时
+        if (this.status == 0) {
+            //进路取消
+            if (equip == 'allcancel') {
+                console.log('点击总取消按钮')
+                this.status = 4
+                this.startCounting()
+                return
+            }
+            //取消引导进路
+            if (equip == 'allrelieve') {
+                console.log('点击总人解')
+                this.status = 5
+                this.startCounting()
+                return
+            }
+
+            //始端列车按钮（LA）
+            if (button && button.type && button.type == 'la') {
+                console.log('点击始端列车按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.status = 1
+                this.startCounting()
+                return
+            }
+            //始端调车按钮（DA）
+            if (button && button.type && button.type == 'da') {
+                console.log('点击始端调车按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.status = 2
+                this.startCounting()
+                return
+            }
+            //信号机引导按钮(YA)
+            if (button && button.type && button.type == 'ya') {
+                console.log('点击信号机引导按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.status = 3
+                this.startCounting()
+                //调出键盘
+                ikeyboard.options.position.of = e
+                ikeyboard.reveal().insertText('')
+                return
+            }
+
+
+        }
+
+        /**
+         * 
+         * 处理函数
+         * 
+         */
+
+        //处理列车进路
+        if (this.status == 1) {
+            if (button.type && button.type == 'la' && equip.uid != this.clickPath[0]) {
+                console.log('点击终端列车按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.commitAction()
+                return
+            }
+        }
+
+        //处理调车进路
+        if (this.status == 2) {
+            if (button.type && button.type == 'da' && equip.uid != this.clickPath[0]) {
+                console.log('点击终端调车按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.commitAction()
+                return
+            }
+        }
+
+        //引导进路
+        if (this.status == 3) {
+            if (equip == 'confirmya') {
+                this.commitAction()
+                return
+            }
+        }
+
+        //进路取消
+        if (this.status == 4) {
+            if (button && button.type && (button.type == 'da' || button.type == 'la')) {
+                console.log('总取消+列车/调车始端按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.commitAction()
+                return
+            }
+        }
+        //进路取消
+        if (this.status == 5) {
+            if (button && button.type && (button.type == 'da' || button.type == 'ya')) {
+                console.log('总人解+引导信号机始端按钮:', equip.uid)
+                this.clickPath.push(equip.uid)
+                this.commitAction()
+                return
+            }
+        }
+
+    }
 }
 
-/**
- * 
- * 
- * 初始化graph
- * 
- * 
- */
-
-
-
-
-//设置数据
-// way.set("alertlist", [{
-// 		time: "12-12 10:10:10",
-// 		content: '有个警报1'
-// 	},
-// 	{
-// 		time: "12-12 10:10:10",
-// 		content: '有个警报2'
-// 	}, {
-// 		time: "12-12 10:10:10",
-// 		content: '有个警报3'
-// 	},
-// ]);
 
 
 /**
@@ -406,6 +519,8 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
 
     window.graph.setCellsSelectable(false)
     window.graph.setCellsMovable(false)
+    window.graph.setCellsEditable(false)
+
 
 
     for (let i in window.graph.getModel().cells) {
@@ -434,15 +549,20 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
     //注册graph的鼠标事件处理
     window.graph.addMouseListener({
         mouseDown: function (sender, evt) {
+
             //过滤鼠标右键
             if (evt.evt.button == 2) return
             //过滤非点击区域
             if (evt.sourceState && getCellUid(evt.sourceState.cell)) {
-                console.log('点击部件：', getEquipCell(evt.sourceState.cell).getAttribute('uid'), getEquipCell(evt.sourceState.cell)
-                    .getAttribute('type'))
-                console.log('点击零件：', evt.sourceState.cell.getAttribute('name'), evt.sourceState.cell.getAttribute('type'))
 
-
+                //把点击按钮和部件发送给graphAction处理
+                window.graphAction.buttonClick({
+                    uid: getEquipCell(evt.sourceState.cell).getAttribute('uid'),
+                    type: getEquipCell(evt.sourceState.cell).getAttribute('type')
+                }, {
+                    name: evt.sourceState.cell.getAttribute('name'),
+                    type: evt.sourceState.cell.getAttribute('type')
+                }, evt.evt)
 
             }
 
@@ -461,7 +581,7 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
 
     window.graph.refresh()
     //滚动视图定位到某个cell
-    window.graph.scrollCellToVisible(parkequip['s10'], 1)
+    window.graph.scrollCellToVisible(parkequip[36], 1)
 
 
     //添加拖拽图标
@@ -477,3 +597,62 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
     document.body.innerHTML =
         '<center style="margin-top:10%;">Error loading resource files. Please check browser console.</center>';
 });
+
+
+//keyboard插件初始化
+
+$('#graphactionhidden')
+    .keyboard({
+        layout: 'qwerty',
+        position: {
+            of: $('#graphactionhidden'),
+            my: 'center top',
+            at: 'center top'
+        }
+    })
+    .addTyping();
+window.ikeyboard = $('#graphactionhidden').getkeyboard()
+$('.ui-keyboard-input').bind('visible hidden beforeClose accepted canceled restricted', function (e, keyboard, el, status) {
+    switch (e.type) {
+        case 'visible':
+            $('.covergraph').show()
+            break;
+        case 'hidden':
+            $('.covergraph').hide()
+            break;
+        case 'accepted':
+            //把点击按钮和部件发送给graphAction处理
+            if (window.ikeyboard.getValue()) {
+
+                switch (window.graphAction.status) {
+                    case 3:
+                        window.graphAction.buttonClick('confirmya')
+                        break
+                }
+
+            } else {
+                window.graphAction.resetStatus()
+            }
+            break;
+        case 'canceled':
+            window.graphAction.resetStatus()
+            break;
+        case 'restricted':
+            break;
+        case 'beforeClose':
+            break;
+    }
+    $('#graphactionhidden').val('')
+});
+$('#graphactionbtn button').click(function () {
+    switch ($(this).index()) {
+        case 2:
+            //总取消
+            window.graphAction.buttonClick('allcancel')
+            break
+        case 3:
+            //取消引导进路
+            window.graphAction.buttonClick('allrelieve')
+            break
+    }
+})
