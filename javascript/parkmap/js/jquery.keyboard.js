@@ -2760,7 +2760,8 @@ http://www.opensource.org/licenses/mit-license.php
 				'Q W E R T Y U I O P',
 				'A S D F G H J K L',
 				'Z X C V B N M < > - + ',
-				'{accept} {cancel}'
+				'封 超 停 电 基 占 限 车 禁 防 脱 检',
+				'{accept} {space} {cancel}'
 			],
 			'shift': [
 				'~ ! @ # $ % ^ & * ( ) _ + {bksp} ',
