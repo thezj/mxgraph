@@ -76,8 +76,6 @@
 			<button type="button" class="btn btn-light">道岔解封</button>
 			<button type="button" class="btn btn-light">上电解锁</button>
 			<button type="button" class="btn btn-light">辅助菜单</button>
-			<button type="button" class="btn btn-light">分路不良</button>
-			<button type="button" class="btn btn-light">标记窗</button>
 
 		</div>
 
@@ -96,5 +94,30 @@
 </body>
 
 <script type="text/javascript" src="js/customfunc.js"></script>
+<script>
 
+    /*
+    * 页面加载完成通知后端
+    */
+    function document_load_ready(key) {
+        var def = $.Deferred();
+        if (window.cefQuery) {
+            window.cefQuery({
+                request: JSON.stringify({
+                    cmd: "load_finish"
+                }),
+                persistent: false,
+                onSuccess: function (response) {
+                    def.resolve(response)
+                },
+                onFailure: function (error_code, error_message) {
+                    def.reject(error_message)
+                }
+            })
+        } else {
+            def.reject('it in not in shell env')
+        }
+        return def
+    }
+</script>
 </html>

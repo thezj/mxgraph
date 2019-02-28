@@ -435,6 +435,7 @@ mxOutline.prototype.getSourceGraphBounds = function()
  */
 mxOutline.prototype.update = function(revalidate)
 {
+	
 	if (this.source != null && this.source.container != null &&
 		this.outline != null && this.outline.container != null)
 	{

@@ -7471,6 +7471,7 @@ mxGraph.prototype.getBoundingBoxFromGeometry = function(cells, includeEdges)
  */
 mxGraph.prototype.refresh = function(cell)
 {
+	
 	this.view.clear(cell, cell == null);
 	this.view.validate();
 	this.sizeDidChange();

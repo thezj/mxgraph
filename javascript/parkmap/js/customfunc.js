@@ -5,126 +5,19 @@
  * 
  */
 
-
 class graphx {
     constructor() {
         this.graph = window.graph
     }
-
 
     //通过id获取cell
     getEquip(uid) {
         return window.parkequip[uid]
     }
 
-    /**
-     * enum CODE_TYPE {
-  CODE_TYPE_NONE,
-  CODE_TYPE_DAOCHA,             // 道岔
-  CODE_TYPE_QUDUAN,             // 区段
-  CODE_TYPE_JZXH,               // 进站信号
-  CODE_TYPE_CZXH,               // 出站信号
-  CODE_TYPE_DCXH,               // 调车信号
-  CODE_TYPE_BSD,                // 表示灯
-  CODE_TYPE_QFJS,               // 铅封计数
-  CODE_TYPE_BJ                  // 报警
-};
-
-/ 信号状态
-struct SignalStatus {
-    BYTE red_blue: 1;             // 红/兰
-    BYTE white : 1;               // 白灯
-    BYTE yellow : 1;              // 黄灯
-    BYTE yellow_twice : 1;        // 双黄
-    BYTE green_yellow : 1;        // 绿黄
-    BYTE green : 1;               // 绿灯
-    BYTE red_white : 1;           // 红白
-    BYTE green_twice : 1;         // 双绿
-
-    BYTE train_btn_flash : 1;     // 列车按钮闪亮
-    BYTE ligth_broken_wire : 1;   // 灯丝断丝
-    BYTE shunt_btn_light : 1;     // 调车按钮闪亮
-    BYTE flash : 1;               // 闪光
-    BYTE reversed : 1;            // 0
-    BYTE reversed2 : 1;           // 0
-    BYTE delay_180s : 1;          // 延时3分钟
-    BYTE delay_30s : 1;           // 延时30秒
-                                  
-    BYTE guaid_10s : 1;           // 引导10s
-    BYTE ramp_delay_lock : 1;     // 坡道延时解锁
-    BYTE closed : 1;              // 封闭
-    BYTE notice : 5;              // 提示信息
-};
-
-// 道岔状态
-struct TurnoutStatus {
-    BYTE pos : 1;                 // 定位
-    BYTE pos_reverse : 1;         // 反位
-    BYTE hold : 1;                // 占用
-    BYTE lock : 1;                // 锁闭
-    BYTE lock_s : 1;              // 单锁
-    BYTE closed : 1;              // 封闭
-    BYTE lock_gt : 1;             // 引导总锁闭
-    BYTE preline_blue_belt : 1;   // 预排兰光带
-    BYTE lock_protect : 1;        // 防护锁闭
-    BYTE reversed : 2;            // 保留
-    BYTE notice : 5;              // 提示信息
-};
-
-// 区段状态
-struct SectionStatus {
-    BYTE hold : 1;                // 占用
-    BYTE lock : 1;                // 锁闭
-    BYTE block : 1;               // 封锁
-    BYTE notice : 5;              // 提示信息
-};
-
-// 表示灯
-struct IndicatorLightStatus {
-    BYTE light : 1;               // 亮灯
-    BYTE flash : 1;               // 闪灯
-    BYTE red : 1;                 // 红灯
-    BYTE yellow : 1;              // 黄灯
-    BYTE green : 1;               // 绿灯
-    BYTE blue : 1;                // 蓝灯
-    BYTE white : 1;               // 白灯
-    BYTE yellow2 : 1;             // 黄灯
-};
-
-// 铅封计数
-struct SealCount {
-    WORD value;
-};
-
-// 报警
-struct AlarmStatus {
-    BYTE value;
-};
-     * 
-     */
-
-    /***
-     * 
-     * 
-     * 设置道岔的状态
-     * status:{
-    pos : 1,              
-    pos_reverse : 1,      
-    hold : 1,             
-    lock : 1,             
-    lock_s : 1,           
-    closed : 1,           
-    lock_gt : 1,          
-    preline_blue_belt : 1,
-    lock_protect : 1,     
-    reversed : 2,         
-    notice : 5,           
-}
-     * 
-     */
-
-    setTurnoutStatus(uid, status) {
+    setTurnoutStatus(uid, status, nofresh) {
         let cell = this.getEquip(uid)
+        if (!cell) return
         cell.equipstatus = status
         //获取零件
         let roadentrance = cell.getSubCell('road-entrance'),
@@ -145,19 +38,19 @@ struct AlarmStatus {
         //重置显示颜色
         let allparts = [reverse, direct, roadreverse, roaddirect, roadentrance]
         allparts.map(a => {
-            a.map(i => i.setVisible(1) + this.setFillColor(i, '#3694FF'))
+            a.map(i => i.setVisible(1) + this.setFillColor(i, '#3694FF', nofresh))
         })
         //重置lable颜色
-        namelabel.map(i => this.setLabelText(i, `<div style="background:none;color:#fff;">${uid}</div>`))
+        namelabel.map(i => this.setLabelText(i, `<div style="background:none;color:#fff;">${uid}</div>`, nofresh))
         //加边框显示
         if (!boundary.length) {
             //获取direct的坐标作为参考,创建一个圆形边框
             let referenceposition = cell.getSubCell('reverse')[0].geometry
             let boundaryvalue = cell.getSubCell('reverse')[0].value.cloneNode(true)
             boundaryvalue.setAttribute('name', 'boundary')
-            boundaryvalue.specialname = 'lock'
             let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x - 4, referenceposition.y - 8, 30, 30, "shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
             newboundary.value = boundaryvalue
+            newboundary.specialname = 'lock'
             boundary.push(newboundary)
         }
         //隐藏边框
@@ -172,39 +65,102 @@ struct AlarmStatus {
          * 开始设置零件样式
          * 
          */
+
+        //绿色稳定显示：表示道岔此时处于定位位置；
         if (status.pos) {
             direct.map(i => {
-                this.setFillColor(i, '#0f0')
+                this.setFillColor(i, '#0f0', nofresh)
             })
-            namelabel.map(i => this.setLabelText(i, `<div style="color:#0f0;">${uid}</div>`))
+            namelabel.map(i => this.setLabelText(i, `<div style="color:#0f0;">${uid}</div>`, nofresh))
         } else {
             direct.map(i => {
                 i.setVisible(0)
             })
         }
+
+        //黄色稳定显示：表示道岔此时处于反位位置；
         if (status.pos_reverse) {
             reverse.map(i => {
-                this.setFillColor(i, '#ff0')
+                this.setFillColor(i, '#ff0', nofresh)
             })
-            namelabel.map(i => this.setLabelText(i, `<div style="color:#ff0;">${uid}</div>`))
+            namelabel.map(i => this.setLabelText(i, `<div style="color:#ff0;">${uid}</div>`, nofresh))
         } else {
             reverse.map(i => {
                 i.setVisible(0)
             })
         }
 
-        if (status.pos == status.pos_reverse == 1) {
+        let ay = [reverse, direct]
+        ay.map(ip => {
+            ip.map(i => {
+                window.globalintervalcell.delete(i)
+            })
+        })
+        //红色闪烁显示：表示道岔已失去表示超过允许失去表示的规定时间（非特殊道岔，一般情况为30秒），此时道岔处于挤岔报警状态，
+        if (status.pos == 1 && status.pos_reverse == 1) {
             let a = [reverse, direct]
             a.map(ip => {
                 ip.map(i => {
-                    this.setFillColor(i, '#f00')
+                    this.setFillColor(i, '#f00', nofresh)
+                    window.globalintervalcell.add(i)
+
                 })
             })
-            namelabel.map(i => this.setLabelText(i, `<div style="color:#f00;">${uid}</div>`))
+            namelabel.map(i => this.setLabelText(i, `<div style="color:#f00;">${uid}</div>`, nofresh))
         }
 
-        if (status.lock) {
-            namelabel.map(i => this.setLabelText(i, '<div style="border:1px solid #f00">' + i.getAttribute('label') + '</div>'))
+
+        //黑色稳定显示：表示道岔刚失去表示
+        if (status.pos == 0 && status.pos_reverse == 0) {
+            let a = [reverse, direct]
+            a.map(ip => {
+                ip.map(i => {
+                    i.setVisible(0)
+                })
+            })
+            namelabel.map(i => this.setLabelText(i, `<div style="color:#f00;">${uid}</div>`, nofresh))
+        }
+
+        //白色光带：道岔所在的轨道区段处于空闲锁闭状态
+        if (status.hold == 0 && status.lock == 1) {
+            let a = [roadentrance]
+
+            if (status.pos == 1 && status.pos_reverse == 0) {
+                a.push(roaddirect, direct)
+            }
+
+            if (status.pos == 0 && status.pos_reverse == 1) {
+                a.push(roadreverse, reverse)
+            }
+
+            a.map(ip => {
+                ip.map(i => {
+                    this.setFillColor(i, '#fff', nofresh)
+                })
+            })
+        }
+
+        //红色光带：道岔所在的轨道区段处于占用或轨道电路故障；
+        if (status.hold == 1) {
+            let a = [roadentrance]
+
+            if (status.pos == 1 && status.pos_reverse == 0) {
+                a.push(roaddirect, direct)
+            }
+
+            if (status.pos == 0 && status.pos_reverse == 1) {
+                a.push(roadreverse, reverse)
+            }
+
+            a.map(ip => {
+                ip.map(i => {
+                    this.setFillColor(i, '#f00', nofresh)
+                })
+            })
+        }
+
+        if (status.closed) {
+            namelabel.map(i => this.setLabelText(i, '<div style="border:1px solid #f00">' + i.getAttribute('label') + '</div>', nofresh))
         }
 
         if (status.lock_s || status.lock_protect || status.lock_gt) {
@@ -214,102 +170,323 @@ struct AlarmStatus {
         }
 
 
+        if (!nofresh) {
+            this.graph.refresh(cell)
+
+            if (cell.children && cell.children.length) {
+                cell.children.map(c => {
+                    if (window.graph.view.getState(c)) window.graph.view.getState(c).setCursor('pointer')
+                })
+            }
+        }
+
+    }
+
+    setSectorStatus(uid, status, nofresh) {
+        let cell = this.getEquip(uid)
+        if (!cell) return
+        cell.equipstatus = status
+        //获取零件
+        let road = cell.getSubCell('road'),
+            namelabel = cell.getSubCell('label')
+
         /**
          * 
-        1、绿色稳定显示：表示道岔此时处于定位位置；如图：
-        2、黄色稳定显示：表示道岔此时处于反位位置；如图：
-        3、黑色稳定显示：表示道岔刚失去表示，失去表示时间未超过允许失去表示的规定时间（非特殊道岔，一般情况为30秒）；如图：
-        4、红色闪烁显示：表示道岔已失去表示超过允许失去表示的规定时间（非特殊道岔，一般情况为30秒），此时道岔处于挤岔报警状态，需要电务人员进行故障处理；如图：
-        5、岔尖处有红色圆圈显示：标识道岔此时处于单锁状态、防护锁状态或引导总锁闭状态。如图：
+         * 初始化所有零件
+         * 
+         */
+        //初始化零件的闪烁状态为不闪烁
+        cell.twinkle = false
+
+        //重置显示颜色
+        let allparts = [road]
+        allparts.map(a => {
+            //空闲蓝色
+            a.map(i => i.setVisible(1) + this.setFillColor(i, '#3694FF', nofresh))
+        })
+        //重置lable颜色
+        namelabel.map(i => this.setLabelText(i, `<div style="background:none;color:#fff;">${uid}</div>`, nofresh))
+
+
+        /**
+         * 
+         * 开始设置零件样式
          * 
          */
 
 
-
-
-        // if (sectorstatus !== undefined) {
-
-        //     /**
-        //      * 
-        //     1、浅蓝色光带：道岔所在的轨道区段处于空闲解锁状态；
-        //     2、白色光带：道岔所在的轨道区段处于空闲锁闭状态；
-        //     3、红色光带：道岔所在的轨道区段处于占用或轨道电路故障；
-        //     4、在原有区段状态上下增加粉红色线框的光带：表示道岔所在区段被人工设置了轨道电路分路不良标记，此标记仅为人工显示的标记，不含任何联锁关系。
-        //      * 
-        //      */
-        //     let a = [roadreverse, roaddirect, roadentrance, reverse, direct]
-        //     if (status == 0) {
-        //         a = [roaddirect, roadentrance, direct]
-        //     } else if (status == 1) {
-        //         a = [roadreverse, roadentrance, reverse]
-        //     }
-        //     switch (sectorstatus) {
-        //         case 0:
-        //             a.map(ip => {
-        //                 ip.map(i => {
-        //                     this.setFillColor(i, '#00f')
-        //                 })
-        //             })
-        //             break
-        //         case 1:
-        //             a.map(ip => {
-        //                 ip.map(i => {
-        //                     this.setFillColor(i, '#fff')
-        //                 })
-        //             })
-        //             break
-        //         case 2:
-        //             a.map(ip => {
-        //                 ip.map(i => {
-        //                     this.setFillColor(i, '#f00')
-        //                 })
-        //             })
-        //             break
-        //     }
-        // }
-
-
-        this.graph.refresh(cell)
-        if (cell.children && cell.children.length) {
-            cell.children.map(c => {
-                if (window.graph.view.getState(c)) window.graph.view.getState(c).setCursor('pointer')
+        //白色光带：道岔所在的轨道区段处于空闲锁闭状态
+        if (status.hold == 0 && status.lock == 1) {
+            road.map(i => {
+                this.setFillColor(i, '#fff', nofresh)
             })
         }
 
-    }
 
-    //设置零件闪烁
-    flashcell(cell) {
+        //红色光带：表示区段为占用状态或区段轨道电路故障；
+        if (status.hold == 1) {
+            road.map(i => {
+                this.setFillColor(i, '#f00', nofresh)
+            })
+        }
 
-        cell.twinkle = true
-        let func = i => {
-            console.log(cell)
-            if (cell.twinkle) {
-                cell.visible = !cell.visible
-                this.graph.refresh(cell)
-                setTimeout(func, 500)
+        //在原有区段状态上下增加粉红色线框的光带：表示区段被人工设置为轨道分路不良标记。
+        if (status.badness == 1) {
+            road.map(i => {
+                this.setStrokeColor(i, '#ff9393', nofresh)
+            })
+        }
+
+        if (!nofresh) {
+            this.graph.refresh(cell)
+
+            if (cell.children && cell.children.length) {
+                cell.children.map(c => {
+                    if (window.graph.view.getState(c)) window.graph.view.getState(c).setCursor('pointer')
+                })
             }
         }
-        func()
-
     }
+
+    setSignalStatus(uid, status, nofresh) {
+        let cell = this.getEquip(uid)
+        if (!cell) return
+        cell.equipstatus = status
+        //获取零件
+        let light = cell.getSubCell('light'),
+            button = cell.getSubCell('button'),
+            namelabel = cell.getSubCell('label'),
+            boundary = cell.getSubCell('boundary')
+
+        /**
+         * 
+         * 初始化所有零件
+         * 
+         */
+        //初始化零件的闪烁状态为不闪烁
+        cell.twinkle = false
+        //重置显示颜色
+        light.map(i => i.setVisible(1) + this.setFillColor(i, '#000', nofresh))
+        //重置lable颜色
+        namelabel.map(i => this.setLabelText(i, `<div style="background:none;color:#fff;">${uid}</div>`, nofresh))
+
+        //加边框显示
+        if (!boundary.length) {
+
+            //获取调车灯坐标作为参考,创建一个叉
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x + 3, referenceposition.y + 3, 14, 14, "shape=umlDestroy;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                boundary.push(newboundary)
+            }
+            //方框
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x, referenceposition.y, 19, 19, "whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                newboundary.specialname = 'rect'
+                boundary.push(newboundary)
+            }
+
+            //获取列车信号坐标作为参考,创建一个叉
+            lightda = light.find(i => i.getAttribute('type') != 'da')
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x + 3, referenceposition.y + 3, 14, 14, "shape=umlDestroy;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                boundary.push(newboundary)
+            }
+            //方框
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x, referenceposition.y, 19, 19, "whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                newboundary.specialname = 'rect'
+                boundary.push(newboundary)
+            }
+
+
+            //获取列车信号按钮坐标作为参考,创建一个叉
+            lightda = button.find(i => i.getAttribute('type') == 'la')
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x, referenceposition.y, 14, 14, "shape=umlDestroy;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                boundary.push(newboundary)
+            }
+
+            //获取引导按钮坐标作为参考,创建一个叉
+            lightda = button.find(i => i.getAttribute('type') == 'ya')
+            if (lightda) {
+                let referenceposition = lightda.geometry
+                let boundaryvalue = lightda.value.cloneNode(true)
+                boundaryvalue.setAttribute('name', 'boundary')
+                let newboundary = this.graph.insertVertex(cell, null, '', referenceposition.x, referenceposition.y, 14, 14, "shape=umlDestroy;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=red;fillColor=none;cursor=pointer;");
+                newboundary.value = boundaryvalue
+                boundary.push(newboundary)
+            }
+
+
+
+        }
+        // 隐藏边框
+        if (boundary.length) {
+            boundary.map(i => {
+                i.setVisible(0)
+            })
+        }
+
+        /**
+         * 
+         * 开始设置零件样式
+         * 
+         */
+
+        if (status.red_blue) {
+
+
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            let light0 = light.find(i => i.getAttribute('type') != 'da')
+
+
+            if (lightda) this.setFillColor(lightda, '#f00', nofresh)
+
+            if ((/^D\d*/i).test(status.name)) {
+                if (lightda) this.setFillColor(lightda, '#00f', nofresh)
+                if (light0) this.setFillColor(light0, '#00f', nofresh)
+                if (status.name.toLowerCase() == 'd16') {
+                    if (lightda) this.setFillColor(lightda, '#f00', nofresh)
+                    if (light0) this.setFillColor(light0, '#f00', nofresh)
+                }
+
+            }
+
+        }
+
+        if (status.white) {
+
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            if (lightda) this.setFillColor(lightda, '#fff', nofresh)
+
+        }
+
+        if (status.yellow) {
+
+            let buttonla = button.find(i => i.getAttribute('type') == 'la')
+            let light0 = light.find(i => i.getAttribute('type') != 'da')
+            if (buttonla) this.setFillColor(light0, '#ff0', nofresh)
+
+        }
+
+        if (status.yellow_twice) {
+
+        }
+
+        if (status.green_yellow) {
+
+        }
+
+        if (status.green) {
+
+            let buttonla = button.find(i => i.getAttribute('type') == 'la')
+            let light0 = light.find(i => i.getAttribute('type') != 'da')
+            if (buttonla) this.setFillColor(light0, '#0f0', nofresh)
+
+
+        }
+
+        if (status.red_white) {
+
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            let light0 = light.find(i => i.getAttribute('type') != 'da')
+            if (lightda) this.setFillColor(lightda, '#f00', nofresh)
+            if (light0) this.setFillColor(light0, '#ff0', nofresh)
+        }
+
+        if (status.green_twice) {
+
+        }
+
+        if (true) {
+            let buttonla = button.find(i => i.getAttribute('type') == 'la')
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            let light0 = light.find(i => i.getAttribute('type') != 'da')
+            window.globalintervalcell.delete(buttonla)
+            window.globalintervalcell.delete(lightda)
+            window.globalintervalcell.delete(light0)
+        }
+
+        if (status.train_btn_flash) {
+            let buttonla = button.find(i => i.getAttribute('type') == 'la')
+            if (buttonla) window.globalintervalcell.add(buttonla)
+        }
+
+        if (status.ligth_broken_wire) {
+
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            if (lightda) window.globalintervalcell.add(lightda)
+
+        }
+
+        if (status.shunt_btn_light) {
+            let lightda = light.find(i => i.getAttribute('type') == 'da')
+            if (lightda) window.globalintervalcell.add(lightda)
+        }
+
+        if (status.flash) {
+
+        }
+
+        if (status.closed) {
+            boundary.map(i => {
+                if (i.specialname == 'rect') i.setVisible(1)
+            })
+        }
+
+
+        if (!nofresh) {
+            this.graph.refresh(cell)
+
+            if (cell.children && cell.children.length) {
+                cell.children.map(c => {
+                    if (window.graph.view.getState(c)) window.graph.view.getState(c).setCursor('pointer')
+                })
+            }
+        }
+    }
+
+
+
+
 
     //设置零件闪烁fillcolor
     flashcellcolor(cell, c1, c2) {
         let randomkey = 'randomkey' + Math.floor(Math.random() * 10000000)
         window[randomkey] = 0
-        cell.twinkle = true
+        let equip = window.getEquipCell(cell)
+        equip.twinkle = true
         let func = i => {
-            console.log(cell)
-            if (cell.twinkle) {
+            if (equip.twinkle) {
                 if (window[randomkey]) {
-                    this.setFillColor(cell, c1)
+                    this.setFillColor(cell, c1, nofresh)
                 } else {
-                    this.setFillColor(cell, c2)
+                    this.setFillColor(cell, c2, nofresh)
                 }
                 window[randomkey] = !window[randomkey]
                 this.graph.refresh(cell)
-                setTimeout(func, 500)
+                setTimeout(func, 1500)
             }
         }
         func()
@@ -318,14 +495,16 @@ struct AlarmStatus {
 
     //换label的文字html
     //this.setLabelText(namelabel,`<div style="background:red;color:white;">hahahha</div>`)
-    setLabelText(cell, code) {
+    setLabelText(cell, code, nofresh) {
         cell.value.setAttribute('label', code)
-        this.graph.refresh(cell)
+        if (!nofresh) {
+            this.graph.refresh(cell)
+        }
     }
 
 
     //换cell的背景颜色
-    setFillColor(cell, color) {
+    setFillColor(cell, color, nofresh) {
         let s = cell.style.split(';')
         s = s.map(kv => {
             if (kv.indexOf('fillColor') > -1) {
@@ -337,11 +516,13 @@ struct AlarmStatus {
             s = s + ';fillColor=' + color
         }
         cell.style = s
-        this.graph.refresh(cell)
+        if (!nofresh) {
+            this.graph.refresh(cell)
+        }
     }
 
     //换cell的边框颜色
-    setStrokeColor(cell, color) {
+    setStrokeColor(cell, color, nofresh) {
         let s = cell.style.split(';')
         s = s.map(kv => {
             if (kv.indexOf('strokeColor') > -1) {
@@ -353,7 +534,9 @@ struct AlarmStatus {
             s = s + ';strokeColor=' + color
         }
         cell.style = s
-        this.graph.refresh(cell)
+        if (!nofresh) {
+            this.graph.refresh(cell)
+        }
     }
 }
 
@@ -391,7 +574,7 @@ window.graphAction = {
                 return
             }
             console.log(Math.floor(15000 - (Date.now() - this.startTime)))
-            $('#countingdown').html('操作剩余时间：' + Math.ceil((15000 - (Date.now() - this.startTime))/1000) + 's')
+            $('#countingdown').html('操作剩余时间：' + Math.ceil((15000 - (Date.now() - this.startTime)) / 1000) + 's')
         }, 1000);
         setTimeout(i => {
             if (this.actionMark != actionMark) return
@@ -742,6 +925,28 @@ window.graphAction = {
 
 /**
  * 
+ * 设置全局闪烁
+ * 
+ */
+window.globalintervalcell = new Set()
+window.globalinterval = setInterval(() => {
+    if (window.globalupdata) {
+        return
+    }
+
+    for (let cell of globalintervalcell) {
+        cell.visible = !cell.visible
+        this.graph.refresh(cell)
+    }
+
+}, 1000);
+
+
+
+
+
+/**
+ * 
  * 拓展一个cell的方法，遍历获取cell下级的cell,通过property的中的name获取
  * 
  * 
@@ -777,7 +982,36 @@ mxCell.prototype.getSubCell = function (name) {
 //设置全局状态
 
 window.set_global_state = state => {
-    console.log(state)
+
+    console.log('全部部件状态初始化', state)
+
+    //1 道岔
+    //2 区段
+    //345 出站信号 进站信号 调车信号
+
+    let controlgraph = new graphx()
+    let model = controlgraph.graph.getModel()
+    window.globalupdata = true
+    model.beginUpdate();
+    state.map((i, index) => {
+        i.name = i.name.toUpperCase()
+        switch (i.type) {
+            case 1:
+                controlgraph.setTurnoutStatus(i.name, i, true)
+                break
+            case 2:
+                controlgraph.setSectorStatus(i.name, i, true)
+                break
+            case 3:
+            case 4:
+            case 5:
+                controlgraph.setSignalStatus(i.name, i, true)
+                break
+        }
+    })
+    model.endUpdate();
+    window.graph.refresh()
+    window.globalupdata = false
 }
 
 //获取cell
@@ -878,8 +1112,17 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
 
     for (let i in window.graph.getModel().cells) {
         let cell = window.graph.getModel().cells[i]
+
+
+        if (cell.getAttribute('name') == 'light') {
+            let referenceposition = cell.geometry,
+                newboundary = this.graph.insertVertex(cell.parent, null, '', referenceposition.x, referenceposition.y, 19, 19, "shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#3694FF;fillColor=none;cursor=pointer;");
+            window.graph.orderCells(1, [newboundary])
+        }
+
         //如果发现uid属性则加入全局存放
         if (cell.getAttribute('uid')) {
+            cell.setAttribute('uid', cell.getAttribute('uid').toUpperCase())
             window.parkequip[cell.getAttribute('uid')] = cell
             //给所有部件的label添加文字
             cell.getSubCell('label')[0].setAttribute('label', cell.getAttribute('uid').toUpperCase())
@@ -971,6 +1214,11 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
 
 
     window.graph.refresh()
+
+    //xml加载完成
+
+    window.document_load_ready()
+
     //滚动视图定位到某个cell
     window.graph.scrollCellToVisible(parkequip[36], 1)
 
@@ -1100,3 +1348,111 @@ $('#graphactionbtn button').click(function () {
 
     }
 })
+
+
+
+/**
+     * enum CODE_TYPE {
+  CODE_TYPE_NONE,
+  CODE_TYPE_DAOCHA,             // 道岔
+  CODE_TYPE_QUDUAN,             // 区段
+  CODE_TYPE_JZXH,               // 进站信号
+  CODE_TYPE_CZXH,               // 出站信号
+  CODE_TYPE_DCXH,               // 调车信号
+  CODE_TYPE_BSD,                // 表示灯
+  CODE_TYPE_QFJS,               // 铅封计数
+  CODE_TYPE_BJ                  // 报警
+};
+
+/ 信号状态
+struct SignalStatus {
+    BYTE red_blue: 1;             // 红/兰
+    BYTE white : 1;               // 白灯
+    BYTE yellow : 1;              // 黄灯
+    BYTE yellow_twice : 1;        // 双黄
+    BYTE green_yellow : 1;        // 绿黄
+    BYTE green : 1;               // 绿灯
+    BYTE red_white : 1;           // 红黄
+    BYTE green_twice : 1;         // 双绿
+
+    BYTE train_btn_flash : 1;     // 列车按钮闪亮
+    BYTE ligth_broken_wire : 1;   // 灯丝断丝
+    BYTE shunt_btn_light : 1;     // 调车按钮闪亮
+    BYTE flash : 1;               // 闪光
+    BYTE reversed : 1;            // 0
+    BYTE reversed2 : 1;           // 0
+    BYTE delay_180s : 1;          // 延时3分钟
+    BYTE delay_30s : 1;           // 延时30秒
+                                  
+    BYTE guaid_10s : 1;           // 引导10s
+    BYTE ramp_delay_lock : 1;     // 坡道延时解锁
+    BYTE closed : 1;              // 封闭
+    BYTE notice : 5;              // 提示信息
+};
+
+// 道岔状态
+struct TurnoutStatus {
+    BYTE pos : 1;                 // 定位
+    BYTE pos_reverse : 1;         // 反位
+    BYTE hold : 1;                // 占用
+    BYTE lock : 1;                // 锁闭
+    BYTE lock_s : 1;              // 单锁
+    BYTE closed : 1;              // 封闭
+    BYTE lock_gt : 1;             // 引导总锁闭
+    BYTE preline_blue_belt : 1;   // 预排兰光带
+    BYTE lock_protect : 1;        // 防护锁闭
+    BYTE reversed : 2;            // 保留
+    BYTE notice : 5;              // 提示信息
+};
+
+// 区段状态
+struct SectionStatus {
+    BYTE hold : 1;                // 占用
+    BYTE lock : 1;                // 锁闭
+    BYTE block : 1;               // 封锁
+    BYTE notice : 5;              // 提示信息
+};
+
+// 表示灯
+struct IndicatorLightStatus {
+    BYTE light : 1;               // 亮灯
+    BYTE flash : 1;               // 闪灯
+    BYTE red : 1;                 // 红灯
+    BYTE yellow : 1;              // 黄灯
+    BYTE green : 1;               // 绿灯
+    BYTE blue : 1;                // 蓝灯
+    BYTE white : 1;               // 白灯
+    BYTE yellow2 : 1;             // 黄灯
+};
+
+// 铅封计数
+struct SealCount {
+    WORD value;
+};
+
+// 报警
+struct AlarmStatus {
+    BYTE value;
+};
+     * 
+     */
+
+/***
+     * 
+     * 
+     * 设置道岔的状态
+     * status:{
+    pos : 1,              
+    pos_reverse : 1,      
+    hold : 1,             
+    lock : 1,             
+    lock_s : 1,           
+    closed : 1,           
+    lock_gt : 1,          
+    preline_blue_belt : 1,
+    lock_protect : 1,     
+    reversed : 2,         
+    notice : 5,           
+}
+     * 
+     */
