@@ -591,7 +591,95 @@ window.graphAction = {
     //发送命令重置状态
     commitAction() {
         console.log('执行命令：', this.status, this.clickPath)
+
+
+        switch (this.status) {
+            case 1:
+                this.status = 0x05
+                break
+            case 2:
+                this.status = 0x05
+                break
+            case 3:
+                this.status = 0xCA
+                break
+            case 4:
+                this.status = 0x1A
+                break
+            case 5:
+                this.status = 0xD5
+                break
+            case 6:
+                this.status = 0x25
+                this.clickPath.push(0x01)
+                break
+            case 7:
+                this.status = 0x25
+                this.clickPath.push(0x02)
+                break
+            case 8:
+                this.status = 0x25
+                this.clickPath.push(0x03)
+                break
+            case 9:
+                this.status = 0x25
+                this.clickPath.push(0x04)
+                break
+            case 10:
+                this.status = 0x25
+                this.clickPath.push(0x05)
+                break
+            case 11:
+                this.status = 0x25
+                this.clickPath.push(0x06)
+                break
+            case 12:
+                this.status = 0x45
+                break
+            case 13:
+                this.status = 0x5A
+                break
+            case 14:
+                this.status = 0xAA
+                break
+            case 15:
+                this.status = 0XB5
+                this.clickPath.push(0x01)
+                break
+            case 16:
+                this.status = 0XB5
+                this.clickPath.push(0x02)
+                break
+        }
+
+        let copy = JSON.parse(JSON.stringify({
+            status: this.status,
+            clickPath: this.clickPath
+        }))
+
+        
+
         this.resetStatus()
+
+        if(copy.clickPath[0] == copy.clickPath[1]){
+            return
+        }
+
+        window.cefQuery({
+            request: JSON.stringify({
+                cmd: "commit_action",
+                data: copy
+            }),
+            persistent: false,
+            onSuccess: function (response) {
+                // def.resolve(response)
+            },
+            onFailure: function (error_code, error_message) {
+                // def.reject(error_message)
+            }
+        })
+
+       
     },
     //存放道岔和区段的对应关系
     switchbelongsector: {
@@ -623,7 +711,11 @@ window.graphAction = {
             //始端列车按钮（LA）
             if (button && button.type && button.type == 'la') {
                 console.log('点击始端列车按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.status = 1
                 this.startCounting()
                 return
@@ -631,7 +723,11 @@ window.graphAction = {
             //始端调车按钮（DA）
             if (button && button.type && button.type == 'da') {
                 console.log('点击始端调车按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.status = 2
                 this.startCounting()
                 return
@@ -639,7 +735,11 @@ window.graphAction = {
             //信号机引导按钮(YA)
             if (button && button.type && button.type == 'ya') {
                 console.log('点击信号机引导按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.status = 3
                 this.startCounting()
                 //调出键盘
@@ -774,7 +874,11 @@ window.graphAction = {
         if (this.status == 1) {
             if (button && button.type && button.type == 'la' && equip.uid != this.clickPath[0]) {
                 console.log('点击终端列车按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -784,7 +888,10 @@ window.graphAction = {
         if (this.status == 2) {
             if (button && button.type && button.type == 'da' && equip.uid != this.clickPath[0]) {
                 console.log('点击终端调车按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -802,7 +909,11 @@ window.graphAction = {
         if (this.status == 4) {
             if (button && button.type && (button.type == 'da' || button.type == 'la')) {
                 console.log('总取消+列车/调车始端按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -815,7 +926,11 @@ window.graphAction = {
 
             if (button && button.type && (button.type == 'la' || button.type == 'ya')) {
                 console.log('总人解+引导信号机始端按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -824,7 +939,11 @@ window.graphAction = {
 
             if (button && button.type && (button.type == 'la' || button.type == 'da')) {
                 console.log('总人解+列车/调车始端按钮:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -833,7 +952,11 @@ window.graphAction = {
         if (this.status == 6) {
             if (equip.type == 'ca') {
                 console.log('道岔总定:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -842,7 +965,11 @@ window.graphAction = {
         if (this.status == 7) {
             if (equip.type == 'ca') {
                 console.log('道岔总反:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -851,7 +978,11 @@ window.graphAction = {
         if (this.status == 8) {
             if (equip.type == 'ca') {
                 console.log('道岔单锁:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -860,7 +991,11 @@ window.graphAction = {
         if (this.status == 9) {
             if (equip.type == 'ca') {
                 console.log('道岔解锁:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -869,7 +1004,11 @@ window.graphAction = {
         if (this.status == 10) {
             if (equip.type == 'ca') {
                 console.log('道岔单封:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -878,7 +1017,11 @@ window.graphAction = {
         if (this.status == 11) {
             if (equip.type == 'ca') {
                 console.log('道岔解封:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -894,7 +1037,11 @@ window.graphAction = {
                     c.setVisible(0)
                     window.graph.refresh(c)
                 })
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -903,7 +1050,11 @@ window.graphAction = {
         if (this.status == 14) {
             if (button && button.type && (button.type == 'da' || button.type == 'la')) {
                 console.log('按钮封闭:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -912,7 +1063,11 @@ window.graphAction = {
         if (this.status == 15) {
             if (button && button.type && (button.type == 'da' || button.type == 'la')) {
                 console.log('按钮解封:', equip.uid)
-                this.clickPath.push(equip.uid)
+
+                this.clickPath.push({
+                    index: equip.cell.equipstatus.index,
+                    name: equip.cell.equipstatus.name
+                })
                 this.commitAction()
                 return
             }
@@ -991,27 +1146,31 @@ window.set_global_state = state => {
 
     let controlgraph = new graphx()
     let model = controlgraph.graph.getModel()
-    window.globalupdata = true
-    model.beginUpdate();
-    state.map((i, index) => {
-        i.name = i.name.toUpperCase()
-        switch (i.type) {
-            case 1:
-                controlgraph.setTurnoutStatus(i.name, i, true)
-                break
-            case 2:
-                controlgraph.setSectorStatus(i.name, i, true)
-                break
-            case 3:
-            case 4:
-            case 5:
-                controlgraph.setSignalStatus(i.name, i, true)
-                break
-        }
-    })
-    model.endUpdate();
-    window.graph.refresh()
-    window.globalupdata = false
+
+    if (state['data_type'] == 'DATA_SDI') {
+
+        window.globalupdata = true
+        model.beginUpdate();
+        state.data.map((i, index) => {
+            i.name = i.name.toUpperCase()
+            switch (i.type) {
+                case 1:
+                    controlgraph.setTurnoutStatus(i.name, i, true)
+                    break
+                case 2:
+                    controlgraph.setSectorStatus(i.name, i, true)
+                    break
+                case 3:
+                case 4:
+                case 5:
+                    controlgraph.setSignalStatus(i.name, i, true)
+                    break
+            }
+        })
+        model.endUpdate();
+        window.graph.refresh()
+        window.globalupdata = false
+    }
 }
 
 //获取cell
@@ -1162,7 +1321,7 @@ mxUtils.getAll([bundle, STYLE_PATH + '/default.xml', defualtxmldoc], function (x
                 if (getCellUid(evt.sourceState.cell)) {
                     //把点击按钮和部件发送给graphAction处理
                     window.graphAction.buttonClick({
-                        uid: getEquipCell(evt.sourceState.cell).getAttribute('uid'),
+                        cell: getEquipCell(evt.sourceState.cell),
                         type: getEquipCell(evt.sourceState.cell).getAttribute('type')
                     }, {
                         name: evt.sourceState.cell.getAttribute('name'),
